@@ -30,10 +30,12 @@ const VenueBookingModel = {
   async findAll({ status } = {}) {
     let query = `
       SELECT vb.*, v.name AS venue_name, v.building, v.venue_type, v.capacity,
-             u.full_name AS requester_name, u.email AS requester_email, u.role AS requester_role
+             u.full_name AS requester_name, u.email AS requester_email, u.role AS requester_role,
+             r.full_name AS reviewed_by_name
       FROM venue_bookings vb
       JOIN venues v ON v.id = vb.venue_id
       JOIN users u ON u.id = vb.requester_id
+      LEFT JOIN users r ON r.id = vb.reviewed_by
     `;
     const values = [];
 
@@ -58,6 +60,36 @@ const VenueBookingModel = {
     return rows[0];
   },
 
+  // All pending/approved bookings for a venue+date that overlap a given time range.
+  // Overlap rule: two ranges overlap if one starts before the other ends, on both sides.
+  async findOverlapping({ venueId, bookingDate, startTime, endTime }) {
+    const query = `
+      SELECT id, start_time, end_time, status
+      FROM venue_bookings
+      WHERE venue_id = $1
+        AND booking_date = $2
+        AND status IN ('pending', 'approved')
+        AND start_time < $4
+        AND end_time > $3
+      ORDER BY start_time ASC;
+    `;
+    const { rows } = await pool.query(query, [venueId, bookingDate, startTime, endTime]);
+    return rows;
+  },
+
+  // All busy windows for a venue on a given date — powers the proactive
+  // "here's what's already booked" display on the request form.
+  async findBusyWindows(venueId, bookingDate) {
+    const query = `
+      SELECT start_time, end_time, status
+      FROM venue_bookings
+      WHERE venue_id = $1 AND booking_date = $2 AND status IN ('pending', 'approved')
+      ORDER BY start_time ASC;
+    `;
+    const { rows } = await pool.query(query, [venueId, bookingDate]);
+    return rows;
+  },
+
   async review({ id, status, reviewedBy, rejectionReason }) {
     const query = `
       UPDATE venue_bookings
@@ -66,6 +98,17 @@ const VenueBookingModel = {
       RETURNING *;
     `;
     const { rows } = await pool.query(query, [status, reviewedBy, rejectionReason || null, id]);
+    return rows[0];
+  },
+
+  async resetToPending(id) {
+    const query = `
+      UPDATE venue_bookings
+      SET status = 'pending', reviewed_by = NULL, reviewed_at = NULL, rejection_reason = NULL, updated_at = now()
+      WHERE id = $1
+      RETURNING *;
+    `;
+    const { rows } = await pool.query(query, [id]);
     return rows[0];
   },
 

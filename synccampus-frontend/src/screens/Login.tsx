@@ -47,7 +47,7 @@ export default function Login() {
     <div className="min-h-screen bg-neutral-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans text-neutral-200">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
         <h2 className="text-3xl font-bold font-mono tracking-tight text-white">
-          SyncCampus Portal
+          CBMS
         </h2>
         <p className="mt-2 text-sm text-neutral-400">
           Sign in to access campus transit and services

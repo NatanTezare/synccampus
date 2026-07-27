@@ -99,7 +99,7 @@ export default function Auth() {
 
           <div className="text-center flex flex-col gap-0.5">
             <div className="text-[21px] font-[800] tracking-[-0.01em] leading-[1.1]" style={{ color: C.blue }}>
-              SYNC CAMPUS
+              CBMS
             </div>
             <div className="text-[11px] font-[600] tracking-[0.14em] uppercase" style={{ color: C.charcoal }}>
               USIU-Africa Portal

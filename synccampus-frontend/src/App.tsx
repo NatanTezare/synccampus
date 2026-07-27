@@ -3,7 +3,6 @@ import AppLayout from './components/layout/AppLayout';
 import Auth from './screens/Auth';
 import Login from './screens/Login';
 import Register from './screens/Register';
-import ComingSoon from './components/ComingSoon';
 import Screen2Shuttle from './screens/Screen2Shuttle';
 import AdminVenueTriage from './screens/AdminVenueTriage';
 import VenueBooking from './screens/VenueBooking'; // Adjust path if you put it in components

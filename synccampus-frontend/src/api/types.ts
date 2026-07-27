@@ -45,6 +45,12 @@ export interface Venue {
   capacity: number;
 }
 
+export interface VenueBusyWindow {
+  start_time: string;
+  end_time: string;
+  status: RequestStatus;
+}
+
 export interface VenueBooking {
   id: string;
   requester_id: string;

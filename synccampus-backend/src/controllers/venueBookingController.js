@@ -35,6 +35,17 @@ exports.createBooking = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Selected venue is not available.' });
     }
 
+    // Real overlap check — not just exact-duplicate blocking
+    const conflicts = await VenueBookingModel.findOverlapping({ venueId, bookingDate, startTime, endTime });
+    if (conflicts.length > 0) {
+      const conflict = conflicts[0];
+      const statusLabel = conflict.status === 'approved' ? 'booked' : 'pending review for that time';
+      return res.status(409).json({
+        success: false,
+        message: `${venue.name} is already ${statusLabel} from ${conflict.start_time.slice(0, 5)} to ${conflict.end_time.slice(0, 5)} on ${bookingDate}. Please choose a different time or venue.`,
+      });
+    }
+
     const booking = await VenueBookingModel.create({
       requesterId: req.user.id,
       venueId,
@@ -53,6 +64,28 @@ exports.createBooking = async (req, res, next) => {
     if (err.code === '23505') {
       return res.status(409).json({ success: false, message: 'This venue is already booked or requested for that exact time slot.' });
     }
+    next(err);
+  }
+};
+
+// GET /api/venues/:venueId/availability?date=YYYY-MM-DD — busy windows for the booking form
+exports.getVenueAvailability = async (req, res, next) => {
+  try {
+    const { venueId } = req.params;
+    const { date } = req.query;
+
+    if (!date) {
+      return res.status(400).json({ success: false, message: 'A date is required to check availability.' });
+    }
+
+    const venue = await VenueModel.findById(venueId);
+    if (!venue) {
+      return res.status(404).json({ success: false, message: 'Venue not found.' });
+    }
+
+    const busyWindows = await VenueBookingModel.findBusyWindows(venueId, date);
+    res.status(200).json({ success: true, data: busyWindows });
+  } catch (err) {
     next(err);
   }
 };
@@ -111,6 +144,34 @@ exports.reviewBooking = async (req, res, next) => {
       success: true,
       message: `Request has been ${decision}.`,
       data: updated,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// PATCH /api/venue-bookings/:id/reset — Admin undoes a previous approve/reject decision
+exports.resetBooking = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const existing = await VenueBookingModel.findById(id);
+    if (!existing) {
+      return res.status(404).json({ success: false, message: 'Booking request not found.' });
+    }
+    if (existing.status === 'pending') {
+      return res.status(409).json({ success: false, message: 'This request is already pending — nothing to undo.' });
+    }
+    if (existing.status === 'cancelled') {
+      return res.status(409).json({ success: false, message: 'A cancelled request cannot be reopened.' });
+    }
+
+    const reset = await VenueBookingModel.resetToPending(id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Decision undone. The request is pending again.',
+      data: reset,
     });
   } catch (err) {
     next(err);
