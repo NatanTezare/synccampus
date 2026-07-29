@@ -55,6 +55,21 @@ const AppointmentModel = {
     return rows[0];
   },
 
+  async findOverlapping({ facultyId, appointmentDate, startTime, endTime }) {
+  const query = `
+    SELECT id, start_time, end_time
+    FROM appointments
+    WHERE faculty_id = $1
+      AND appointment_date = $2
+      AND status IN ('pending', 'confirmed')
+      AND start_time < $4
+      AND end_time > $3
+    ORDER BY start_time ASC;
+  `;
+  const { rows } = await pool.query(query, [facultyId, appointmentDate, startTime, endTime]);
+  return rows;
+},
+
   async respond({ id, status, facultyNotes }) {
     const { rows } = await pool.query(
       `UPDATE appointments SET status = $1, faculty_notes = $2, updated_at = now()

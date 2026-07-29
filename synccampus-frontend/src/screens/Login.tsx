@@ -33,8 +33,15 @@ export default function Login() {
         password,
       });
 
-      // Route the user straight back to the shuttle dashboard
-      navigate('/shuttle');
+      // Get the user that was just saved to storage
+      const user = authService.getStoredUser();
+
+      // Route the admin to Venue Triage, and everyone else to the shuttle dashboard
+      if (user?.role === 'admin') {
+        navigate('/admin/venues');
+      } else {
+        navigate('/shuttle');
+      }
     } catch (err: any) {
       // Your client-side interceptor already normalizes errors to { status, message }
       setError(err.message || 'Invalid credentials. Please try again.');

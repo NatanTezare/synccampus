@@ -97,3 +97,42 @@ export const RouteIcon = (props: IconProps) => (
     <path d="M5.5 7.8V13a3 3 0 003 3h5a3 3 0 013 3v-.2" strokeDasharray="3 3" />
   </svg>
 );
+
+export const SunIcon = (props: IconProps) => (
+  <svg {...base} {...props}>
+    <circle cx="12" cy="12" r="4.5" />
+    <path d="M12 2.5v2.5M12 19v2.5M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M2.5 12H5M19 12h2.5M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" />
+  </svg>
+);
+
+export const MoonIcon = (props: IconProps) => (
+  <svg {...base} {...props}>
+    <path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z" />
+  </svg>
+);
+
+export const VolumeIcon = (props: IconProps) => (
+  <svg {...base} {...props}>
+    <path d="M4 9v6h4l5 4V5L8 9H4z" strokeLinejoin="round" />
+    <path d="M16.5 9a4 4 0 010 6M19.5 6.5a8 8 0 010 11" />
+  </svg>
+);
+
+export const PlayIcon = (props: IconProps) => (
+  <svg {...base} fill="currentColor" stroke="none" {...props}>
+    <path d="M6 4.5v15l13-7.5-13-7.5z" />
+  </svg>
+);
+
+export const PauseIcon = (props: IconProps) => (
+  <svg {...base} fill="currentColor" stroke="none" {...props}>
+    <rect x="6" y="4.5" width="4" height="15" rx="1" />
+    <rect x="14" y="4.5" width="4" height="15" rx="1" />
+  </svg>
+);
+
+export const StopIcon = (props: IconProps) => (
+  <svg {...base} fill="currentColor" stroke="none" {...props}>
+    <rect x="5" y="5" width="14" height="14" rx="2" />
+  </svg>
+);

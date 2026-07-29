@@ -2,17 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { appointmentService } from '../services/appointmentService';
 import type { CreateAppointmentPayload } from '../services/appointmentService';
 import type { Appointment, FacultyDirectoryEntry, AvailableSlot } from '../api/types';
-
-const C = {
-  blue: "#2B3990",
-  amber: "#FFCB05",
-  alice: "#E8F4FF",
-  aliceLight: "#F3F9FF",
-  charcoal: "#54566A",
-  dark: "#1a1c2e",
-  success: "#10B21B",
-  danger: "#E31818",
-};
+import { useTheme } from '../theme/useTheme';
+import { tint } from '../theme/tint';
 
 function formatTime(time: string) {
   const [h, m] = time.split(':').map(Number);
@@ -26,20 +17,22 @@ function formatDateLabel(dateStr: string) {
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
-const inputStyle = { background: C.aliceLight, color: C.dark };
-const inputClass =
-  'w-full rounded-xl px-3.5 py-3 outline-none text-[13px] border-2 border-transparent focus:border-[#2B3990] transition-all disabled:opacity-50';
-const labelClass = 'text-[11px] font-[700] uppercase tracking-[0.05em]';
-
-const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
-  pending: { bg: '#FFF9E6', text: '#B45309', label: 'Pending' },
-  confirmed: { bg: '#E6F9E8', text: C.success, label: 'Confirmed' },
-  rejected: { bg: '#FFF0F0', text: C.danger, label: 'Rejected' },
-  cancelled: { bg: C.aliceLight, text: C.charcoal, label: 'Cancelled' },
-  completed: { bg: C.aliceLight, text: C.charcoal, label: 'Completed' },
-};
-
 export default function Appointments() {
+  const C = useTheme();
+
+  const inputStyle = { background: C.aliceLight, color: C.dark };
+  const inputClass =
+    'w-full rounded-xl px-3.5 py-3 outline-none text-[13px] border-2 border-transparent focus:border-[#2B3990] transition-all disabled:opacity-50';
+  const labelClass = 'text-[11px] font-[700] uppercase tracking-[0.05em]';
+
+  const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+    pending: { bg: tint('#F59E0B', 18), text: '#B45309', label: 'Pending' },
+    confirmed: { bg: tint(C.success, 15), text: C.success, label: 'Confirmed' },
+    rejected: { bg: tint(C.danger, 12), text: C.danger, label: 'Rejected' },
+    cancelled: { bg: C.aliceLight, text: C.charcoal, label: 'Cancelled' },
+    completed: { bg: C.aliceLight, text: C.charcoal, label: 'Completed' },
+  };
+
   const [facultyList, setFacultyList] = useState<FacultyDirectoryEntry[]>([]);
   const [availableSlots, setAvailableSlots] = useState<AvailableSlot[]>([]);
   const [myAppointments, setMyAppointments] = useState<Appointment[]>([]);
@@ -171,11 +164,11 @@ export default function Appointments() {
 
       <div className="p-4 md:p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* New Request */}
-        <div className="bg-white rounded-2xl p-5" style={{ boxShadow: '0 1px 6px rgba(43,57,144,0.05)', border: '1px solid rgba(43,57,144,0.06)' }}>
+        <div className="rounded-2xl p-5" style={{ background: C.surface, boxShadow: '0 1px 6px rgba(43,57,144,0.05)', border: `1px solid ${C.border}` }}>
           <h3 className="text-[15px] font-[800] mb-4" style={{ color: C.dark }}>New Request</h3>
 
           {formError && (
-            <div className="mb-4 p-3 rounded-xl text-xs font-semibold text-center" style={{ background: '#FFF0F0', color: C.danger, border: '1px solid rgba(227,24,24,0.2)' }}>
+            <div className="mb-4 p-3 rounded-xl text-xs font-semibold text-center" style={{ background: tint(C.danger, 10), color: C.danger, border: `1px solid ${tint(C.danger, 30)}` }}>
               {formError}
             </div>
           )}
@@ -193,7 +186,6 @@ export default function Appointments() {
               </select>
             </div>
 
-            {/* Slot picker — booked times simply never appear here */}
             {facultyId && (
               <div className="flex flex-col gap-2">
                 <label className={labelClass} style={{ color: C.charcoal }}>Available Time Slots</label>
@@ -201,7 +193,7 @@ export default function Appointments() {
                 {slotsLoading ? (
                   <p className="text-xs" style={{ color: C.charcoal }}>Checking availability...</p>
                 ) : slotsByDate.length === 0 ? (
-                  <div className="rounded-xl p-3" style={{ background: '#FFF0F0', border: '1px solid rgba(227,24,24,0.2)' }}>
+                  <div className="rounded-xl p-3" style={{ background: tint(C.danger, 10), border: `1px solid ${tint(C.danger, 30)}` }}>
                     <p className="text-xs" style={{ color: C.danger }}>
                       No open slots for this faculty member right now — either they haven't set their
                       weekly availability, or every upcoming slot is already booked.
@@ -222,9 +214,9 @@ export default function Appointments() {
                                 onClick={() => setSelectedSlot(slot)}
                                 className="min-h-[40px] rounded-xl text-xs font-bold transition-all"
                                 style={{
-                                  background: isSelected ? C.blue : '#fff',
+                                  background: isSelected ? C.blue : C.surface,
                                   color: isSelected ? '#fff' : C.dark,
-                                  border: `2px solid ${isSelected ? C.blue : 'rgba(43,57,144,0.1)'}`,
+                                  border: `2px solid ${isSelected ? C.blue : C.border}`,
                                   boxShadow: isSelected ? '0 4px 12px rgba(43,57,144,0.2)' : '0 1px 3px rgba(0,0,0,0.04)',
                                 }}
                               >
@@ -259,7 +251,7 @@ export default function Appointments() {
               disabled={!selectedSlot || submitting}
               className="w-full rounded-xl p-[13px] text-[14px] font-[800] transition-all"
               style={{
-                background: !selectedSlot || submitting ? '#c8d4e8' : C.dark,
+                background: !selectedSlot || submitting ? '#c8d4e8' : C.blue,
                 color: '#fff',
                 cursor: !selectedSlot || submitting ? 'not-allowed' : 'pointer',
               }}
@@ -286,8 +278,8 @@ export default function Appointments() {
                 return (
                   <div
                     key={app.id}
-                    className="bg-white rounded-2xl p-4"
-                    style={{ boxShadow: '0 1px 6px rgba(43,57,144,0.05)', border: '1px solid rgba(43,57,144,0.06)' }}
+                    className="rounded-2xl p-4"
+                    style={{ background: C.surface, boxShadow: '0 1px 6px rgba(43,57,144,0.05)', border: `1px solid ${C.border}` }}
                   >
                     <div className="flex justify-between items-start gap-2 mb-1.5">
                       <p className="text-sm font-[800]" style={{ color: C.dark }}>{app.faculty_name}</p>

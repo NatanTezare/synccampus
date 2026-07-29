@@ -2,17 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { venueService } from '../services/venueService';
 import type { CreateVenueBookingPayload } from '../services/venueService';
 import type { Venue, VenueBooking, VenueBusyWindow } from '../api/types';
-
-const C = {
-  blue: "#2B3990",
-  amber: "#FFCB05",
-  alice: "#E8F4FF",
-  aliceLight: "#F3F9FF",
-  charcoal: "#54566A",
-  dark: "#1a1c2e",
-  success: "#10B21B",
-  danger: "#E31818",
-};
+import { useTheme } from '../theme/useTheme';
+import { tint } from '../theme/tint';
 
 function formatTime(time: string) {
   const [h, m] = time.split(':').map(Number);
@@ -29,19 +20,21 @@ function rangesOverlap(aStart: string, aEnd: string, bStart: string, bEnd: strin
   return aStart < bEnd && aEnd > bStart;
 }
 
-const inputStyle = { background: C.aliceLight, color: C.dark };
-const inputClass =
-  'w-full rounded-xl px-3.5 py-3 outline-none text-[13px] border-2 border-transparent focus:border-[#2B3990] transition-all';
-const labelClass = 'text-[11px] font-[700] uppercase tracking-[0.05em]';
-
-const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
-  pending: { bg: '#FFF9E6', text: '#B45309', label: 'Pending' },
-  approved: { bg: '#E6F9E8', text: C.success, label: 'Approved' },
-  rejected: { bg: '#FFF0F0', text: C.danger, label: 'Rejected' },
-  cancelled: { bg: C.aliceLight, text: C.charcoal, label: 'Cancelled' },
-};
-
 export default function VenueBooking() {
+  const C = useTheme();
+
+  const inputStyle = { background: C.aliceLight, color: C.dark };
+  const inputClass =
+    'w-full rounded-xl px-3.5 py-3 outline-none text-[13px] border-2 border-transparent focus:border-[#2B3990] transition-all';
+  const labelClass = 'text-[11px] font-[700] uppercase tracking-[0.05em]';
+
+  const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+    pending: { bg: tint('#F59E0B', 18), text: '#B45309', label: 'Pending' },
+    approved: { bg: tint(C.success, 15), text: C.success, label: 'Approved' },
+    rejected: { bg: tint(C.danger, 12), text: C.danger, label: 'Rejected' },
+    cancelled: { bg: C.aliceLight, text: C.charcoal, label: 'Cancelled' },
+  };
+
   const [venues, setVenues] = useState<Venue[]>([]);
   const [myBookings, setMyBookings] = useState<VenueBooking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -153,11 +146,11 @@ export default function VenueBooking() {
 
       <div className="flex-1 p-4 md:p-5 flex flex-col gap-5">
         {/* Request form */}
-        <div className="bg-white rounded-2xl p-5" style={{ boxShadow: '0 1px 6px rgba(43,57,144,0.05)', border: '1px solid rgba(43,57,144,0.06)' }}>
+        <div className="rounded-2xl p-5" style={{ background: C.surface, boxShadow: '0 1px 6px rgba(43,57,144,0.05)', border: `1px solid ${C.border}` }}>
           <h3 className="text-[15px] font-[800] mb-4" style={{ color: C.dark }}>Request a Space</h3>
 
           {submitError && (
-            <div className="mb-4 p-3 rounded-xl text-xs font-semibold text-center" style={{ background: '#FFF0F0', color: C.danger, border: '1px solid rgba(227,24,24,0.2)' }}>
+            <div className="mb-4 p-3 rounded-xl text-xs font-semibold text-center" style={{ background: tint(C.danger, 10), color: C.danger, border: `1px solid ${tint(C.danger, 30)}` }}>
               {submitError}
             </div>
           )}
@@ -173,7 +166,6 @@ export default function VenueBooking() {
               </select>
             </div>
 
-            {/* Mobile-responsive: stacks on phones, three-across from sm: up */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="flex flex-col gap-1.5">
                 <label className={labelClass} style={{ color: C.charcoal }}>Date</label>
@@ -203,9 +195,8 @@ export default function VenueBooking() {
               </div>
             </div>
 
-            {/* Proactive availability */}
             {venueId && bookingDate && (
-              <div className="rounded-xl p-3.5" style={{ background: C.aliceLight, border: '1px solid rgba(43,57,144,0.1)' }}>
+              <div className="rounded-xl p-3.5" style={{ background: C.aliceLight, border: `1px solid ${C.border}` }}>
                 {busyLoading ? (
                   <p className="text-xs" style={{ color: C.charcoal }}>Checking existing bookings...</p>
                 ) : busyWindows.length === 0 ? (
@@ -253,12 +244,12 @@ export default function VenueBooking() {
 
             <button
               type="submit"
-              disabled={submitting || !!clientConflict}
+              disabled={submitting || !!clientConflict || !venueId || !bookingDate || !startTime || !endTime || !purpose.trim()}
               className="w-full rounded-xl p-[13px] text-[14px] font-[800] transition-all"
               style={{
-                background: submitting || clientConflict ? '#c8d4e8' : C.dark,
+                background: (submitting || !!clientConflict || !venueId || !bookingDate || !startTime || !endTime || !purpose.trim()) ? '#c8d4e8' : C.blue,
                 color: '#fff',
-                cursor: submitting || clientConflict ? 'not-allowed' : 'pointer',
+                cursor: (submitting || !!clientConflict || !venueId || !bookingDate || !startTime || !endTime || !purpose.trim()) ? 'not-allowed' : 'pointer',
               }}
             >
               {submitting ? 'Submitting...' : clientConflict ? 'Time unavailable' : 'Submit Request'}
@@ -279,8 +270,8 @@ export default function VenueBooking() {
                 return (
                   <div
                     key={booking.id}
-                    className="bg-white rounded-2xl p-4"
-                    style={{ boxShadow: '0 1px 6px rgba(43,57,144,0.05)', border: '1px solid rgba(43,57,144,0.06)' }}
+                    className="rounded-2xl p-4"
+                    style={{ background: C.surface, boxShadow: '0 1px 6px rgba(43,57,144,0.05)', border: `1px solid ${C.border}` }}
                   >
                     <div className="flex justify-between items-start gap-2 mb-1.5">
                       <p className="text-sm font-[800]" style={{ color: C.dark }}>{booking.venue_name}</p>
@@ -294,7 +285,7 @@ export default function VenueBooking() {
                     <p className="text-xs" style={{ color: C.charcoal }}>{booking.purpose}</p>
 
                     {booking.status === 'rejected' && booking.rejection_reason && (
-                      <p className="text-xs mt-2 p-2 rounded-lg" style={{ background: '#FFF0F0', color: C.danger }}>
+                      <p className="text-xs mt-2 p-2 rounded-lg" style={{ background: tint(C.danger, 10), color: C.danger }}>
                         "{booking.rejection_reason}"
                       </p>
                     )}

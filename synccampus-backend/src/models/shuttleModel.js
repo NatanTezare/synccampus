@@ -8,11 +8,25 @@ const ShuttleModel = {
     return rows;
   },
 
-  async listSchedulesByRoute(routeId) {
+  // UPDATED: Now accepts travelDate and uses a subquery to count booked seats
+  async listSchedulesByRoute(routeId, travelDate) {
     const { rows } = await pool.query(
-      `SELECT id, route_id, departure_time, total_seats
-       FROM bus_schedules WHERE route_id = $1 AND is_active = TRUE ORDER BY departure_time`,
-      [routeId]
+      `SELECT 
+         bs.id, 
+         bs.route_id, 
+         bs.departure_time, 
+         bs.total_seats,
+         COALESCE((
+           SELECT COUNT(*) 
+           FROM bus_bookings bb 
+           WHERE bb.schedule_id = bs.id 
+             AND bb.travel_date = $2 
+             AND bb.status = 'booked'
+         ), 0)::int AS booked_seats
+       FROM bus_schedules bs 
+       WHERE bs.route_id = $1 AND bs.is_active = TRUE 
+       ORDER BY bs.departure_time`,
+      [routeId, travelDate]
     );
     return rows;
   },

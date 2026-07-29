@@ -52,6 +52,20 @@ exports.createAppointment = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Please provide a brief purpose (at least 10 characters) so the faculty member has context.' });
     }
 
+    if (purpose.trim().length < 10) {
+      return res.status(400).json({ success: false, message: 'Please provide a brief purpose (at least 10 characters) so the faculty member has context.' });
+    }
+
+    const conflicts = await AppointmentModel.findOverlapping({ facultyId, appointmentDate, startTime, endTime });
+    if (conflicts.length > 0) {
+      return res.status(409).json({
+        success: false,
+        message: `This faculty member already has an appointment from ${conflicts[0].start_time.slice(0, 5)} to ${conflicts[0].end_time.slice(0, 5)} that day. Please pick a different time.`,
+      });
+    }
+
+    
+
     const appointment = await AppointmentModel.create({
       studentId: req.user.id,
       facultyId,

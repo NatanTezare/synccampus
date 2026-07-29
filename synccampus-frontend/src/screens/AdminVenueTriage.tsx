@@ -1,18 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { venueService } from '../services/venueService';
 import type { VenueBooking } from '../api/types';
+import { useTheme } from '../theme/useTheme';
+import { tint } from '../theme/tint';
 
-const C = {
-  blue: "#2B3990",
-  amber: "#FFCB05",
-  alice: "#E8F4FF",
-  aliceLight: "#F3F9FF",
-  charcoal: "#54566A",
-  success: "#10B21B",
-  danger: "#E31818",
-};
-
-const VENUE_COLORS = [C.blue, "#8B5CF6", C.success, "#F97316", "#EC4899", "#06B6D4", C.danger];
+const VENUE_COLOR_HEXES = ["#8B5CF6", "#F97316", "#EC4899", "#06B6D4"];
 
 function parseHour(timeStr: string | undefined): number {
   if (!timeStr) return 9;
@@ -39,21 +31,24 @@ function todayIso() {
   return new Date().toISOString().slice(0, 10);
 }
 
-function RoleBadge({ role }: { role?: string }) {
-  if (!role) return null;
-  const isFaculty = role === 'faculty_leadership';
-  const label = isFaculty ? 'Faculty' : role === 'admin' ? 'Admin' : 'Student';
-  return (
-    <span
-      className="text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wide shrink-0"
-      style={{ background: isFaculty ? '#EEF2FF' : C.aliceLight, color: isFaculty ? C.blue : C.charcoal }}
-    >
-      {label}
-    </span>
-  );
-}
-
 export default function AdminVenueTriage() {
+  const C = useTheme();
+  const VENUE_COLORS = [C.blue, ...VENUE_COLOR_HEXES, C.danger];
+
+  function RoleBadge({ role }: { role?: string }) {
+    if (!role) return null;
+    const isFaculty = role === 'faculty_leadership';
+    const label = isFaculty ? 'Faculty' : role === 'admin' ? 'Admin' : 'Student';
+    return (
+      <span
+        className="text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wide shrink-0"
+        style={{ background: isFaculty ? tint(C.blue, 12) : C.aliceLight, color: isFaculty ? C.blue : C.charcoal }}
+      >
+        {label}
+      </span>
+    );
+  }
+
   const [bookings, setBookings] = useState<VenueBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("All");
@@ -210,10 +205,10 @@ export default function AdminVenueTriage() {
 
       <div className="flex-1 flex overflow-hidden">
         {/* LEFT PANEL — Triage Queue */}
-        <div className="w-[360px] lg:w-[440px] shrink-0 bg-white flex flex-col border-r z-20 shadow-lg" style={{ borderColor: "rgba(43,57,144,0.09)" }}>
-          <div className="p-5 border-b flex flex-col gap-3 shrink-0" style={{ borderColor: "rgba(43,57,144,0.07)" }}>
+        <div className="w-[360px] lg:w-[440px] shrink-0 flex flex-col z-20 shadow-lg" style={{ background: C.surface, borderRight: `1px solid ${C.border}` }}>
+          <div className="p-5 flex flex-col gap-3 shrink-0" style={{ borderBottom: `1px solid ${C.border}` }}>
             <div className="flex justify-between items-baseline">
-              <h2 className="text-lg font-black tracking-tight" style={{ color: "#1a1c2e" }}>Triage Queue</h2>
+              <h2 className="text-lg font-black tracking-tight" style={{ color: C.dark }}>Triage Queue</h2>
               {pendingCount > 0 && (
                 <span className="text-xs font-extrabold text-white px-2.5 py-1 rounded-full" style={{ background: C.danger }}>
                   {pendingCount} Pending
@@ -264,8 +259,9 @@ export default function AdminVenueTriage() {
                       setHoveredVenue(null);
                       setHoveredCardId(null);
                     }}
-                    className="shrink-0 bg-white rounded-2xl border-2 flex flex-col overflow-hidden transition-all duration-150"
+                    className="shrink-0 rounded-2xl border-2 flex flex-col overflow-hidden transition-all duration-150"
                     style={{
+                      background: C.surface,
                       borderColor:
                         req.status === 'approved'
                           ? C.success
@@ -273,7 +269,7 @@ export default function AdminVenueTriage() {
                           ? C.danger
                           : isHovered
                           ? C.blue
-                          : "rgba(43,57,144,0.12)",
+                          : C.border,
                       boxShadow: isHovered && isPending ? '0 4px 16px rgba(43,57,144,0.14)' : '0 1px 4px rgba(0,0,0,0.04)',
                       opacity: isBusy ? 0.6 : !isPending ? 0.92 : 1,
                     }}
@@ -282,7 +278,7 @@ export default function AdminVenueTriage() {
                     <div className="p-4 flex flex-col gap-3">
                       <div className="flex justify-between items-start gap-2">
                         <div className="min-w-0">
-                          <h4 className="text-sm font-extrabold truncate" style={{ color: "#1a1c2e" }}>
+                          <h4 className="text-sm font-extrabold truncate" style={{ color: C.dark }}>
                             {req.venue_name || 'Unknown Venue'}
                           </h4>
                           <p className="text-xs mt-0.5 truncate" style={{ color: C.charcoal }}>
@@ -300,15 +296,15 @@ export default function AdminVenueTriage() {
                       <div className="grid grid-cols-2 gap-2.5 text-sm p-3 rounded-xl" style={{ background: C.aliceLight }}>
                         <div>
                           <span className="block text-xs uppercase tracking-wide" style={{ color: C.charcoal }}>Date</span>
-                          <span className="font-bold" style={{ color: "#1a1c2e" }}>{formatShortDate(req.booking_date)}</span>
+                          <span className="font-bold" style={{ color: C.dark }}>{formatShortDate(req.booking_date)}</span>
                         </div>
                         <div>
                           <span className="block text-xs uppercase tracking-wide" style={{ color: C.charcoal }}>Hours</span>
-                          <span className="font-bold" style={{ color: "#1a1c2e" }}>{req.start_time} – {req.end_time}</span>
+                          <span className="font-bold" style={{ color: C.dark }}>{req.start_time} – {req.end_time}</span>
                         </div>
-                        <div className="col-span-2 border-t pt-2 mt-1" style={{ borderColor: "rgba(43,57,144,0.08)" }}>
+                        <div className="col-span-2 border-t pt-2 mt-1" style={{ borderColor: C.border }}>
                           <span className="block text-xs uppercase tracking-wide" style={{ color: C.charcoal }}>Purpose</span>
-                          <span className="font-bold line-clamp-2" style={{ color: "#1a1c2e" }}>{req.purpose}</span>
+                          <span className="font-bold line-clamp-2" style={{ color: C.dark }}>{req.purpose}</span>
                         </div>
                       </div>
 
@@ -330,9 +326,9 @@ export default function AdminVenueTriage() {
                               }}
                               className="w-full text-sm px-3.5 py-3 rounded-xl border-2 outline-none transition-colors placeholder:text-gray-400"
                               style={{
-                                background: '#fff',
-                                color: C.charcoal,
-                                borderColor: fieldErrors[req.id] ? C.danger : 'rgba(43,57,144,0.15)',
+                                background: C.aliceLight,
+                                color: C.dark,
+                                borderColor: fieldErrors[req.id] ? C.danger : C.border,
                               }}
                             />
                             {fieldErrors[req.id] && (
@@ -365,52 +361,17 @@ export default function AdminVenueTriage() {
                           </div>
                         </div>
                       ) : (
-                        <div className="flex flex-col gap-2">
-                          <div
-                            className="rounded-xl p-3.5 flex flex-col gap-1.5"
-                            style={{ background: req.status === "approved" ? "#E6F9E8" : "#FFF0F0" }}
-                          >
-                            <div className="flex items-center justify-between gap-2">
-                              <span
-                                className="text-sm font-extrabold"
-                                style={{ color: req.status === "approved" ? C.success : C.danger }}
-                              >
-                                {req.status === "approved" ? "✓ Approved" : "✕ Rejected"}
-                              </span>
-                              {req.reviewed_by_name && (
-                                <span className="text-xs font-semibold shrink-0" style={{ color: C.charcoal }}>
-                                  by {req.reviewed_by_name}
-                                </span>
-                              )}
-                            </div>
-
-                            {req.status === "rejected" && req.rejection_reason && (
-                              <p className="text-xs leading-relaxed" style={{ color: C.charcoal }}>
-                                "{req.rejection_reason}"
-                              </p>
-                            )}
+                        <div className="flex flex-col gap-1.5">
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px", borderRadius: 10, background: req.status === "approved" ? tint(C.success, 15) : tint(C.danger, 12), color: req.status === "approved" ? C.success : C.danger, fontWeight: 900, fontSize: 13 }}>
+                            {req.status === "approved" ? "✓ Approved" : "✕ Rejected"}
+                            <button
+                              onClick={() => handleUndo(req.id)}
+                              disabled={isBusy}
+                              style={{ background: "none", border: "none", cursor: isBusy ? "not-allowed" : "pointer", fontSize: 11, color: "inherit", opacity: 0.7, marginLeft: 4 }}
+                            >
+                              (undo)
+                            </button>
                           </div>
-
-                          <button
-                            onClick={() => handleUndo(req.id)}
-                            disabled={isBusy}
-                            className="min-h-[40px] w-full rounded-xl text-sm font-bold border-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            style={{
-                              background: "#fff",
-                              borderColor: req.status === "approved" ? "rgba(16,178,27,0.3)" : "rgba(227,24,24,0.3)",
-                              color: req.status === "approved" ? C.success : C.danger,
-                            }}
-                            onMouseOver={(e) => {
-                              e.currentTarget.style.background =
-                                req.status === "approved" ? "rgba(16,178,27,0.06)" : "rgba(227,24,24,0.06)";
-                            }}
-                            onMouseOut={(e) => {
-                              e.currentTarget.style.background = "#fff";
-                            }}
-                          >
-                            {isBusy ? "Undoing..." : "↺ Undo decision"}
-                          </button>
-
                           {fieldErrors[req.id] && (
                             <p className="text-xs font-bold px-1" style={{ color: C.danger }}>{fieldErrors[req.id]}</p>
                           )}
@@ -424,7 +385,7 @@ export default function AdminVenueTriage() {
           </div>
 
           {/* Live summary footer */}
-          <div className="p-4 border-t flex gap-6 shrink-0" style={{ borderColor: "rgba(43,57,144,0.07)", background: C.aliceLight }}>
+          <div className="p-4 flex gap-6 shrink-0" style={{ borderTop: `1px solid ${C.border}`, background: C.aliceLight }}>
             {[
               { label: "Pending", val: pendingCount, color: C.danger },
               { label: "Approved", val: approvedCount, color: C.success },
@@ -439,10 +400,10 @@ export default function AdminVenueTriage() {
         </div>
 
         {/* RIGHT PANEL — Master Grid Calendar */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-white z-10">
-          <div className="p-5 md:px-6 border-b flex justify-between items-center shrink-0" style={{ borderColor: "rgba(43,57,144,0.07)" }}>
+        <div className="flex-1 flex flex-col overflow-hidden z-10" style={{ background: C.surface }}>
+          <div className="p-5 md:px-6 flex justify-between items-center shrink-0" style={{ borderBottom: `1px solid ${C.border}` }}>
             <div>
-              <h3 className="text-lg font-black" style={{ color: "#1a1c2e" }}>Master Reservation Matrix</h3>
+              <h3 className="text-lg font-black" style={{ color: C.dark }}>Master Reservation Matrix</h3>
               <p className="text-sm mt-0.5" style={{ color: C.charcoal }}>
                 {dynamicDates.length > 0
                   ? `${formatShortDate(dynamicDates[0])} – ${formatShortDate(dynamicDates[dynamicDates.length - 1])} · ${dynamicVenues.length} venue${dynamicVenues.length === 1 ? '' : 's'}`
@@ -467,10 +428,10 @@ export default function AdminVenueTriage() {
             ) : (
               <div className="min-w-[920px]">
                 <div
-                  className="grid border-b-2 sticky top-0 bg-white z-10 shadow-sm"
-                  style={{ gridTemplateColumns: `160px repeat(${dynamicDates.length}, minmax(130px, 1fr))`, borderColor: "rgba(43,57,144,0.1)" }}
+                  className="grid border-b-2 sticky top-0 z-10 shadow-sm"
+                  style={{ gridTemplateColumns: `160px repeat(${dynamicDates.length}, minmax(130px, 1fr))`, borderColor: C.border, background: C.surface }}
                 >
-                  <div className="p-3 text-xs font-extrabold tracking-wide uppercase border-r" style={{ color: C.charcoal, borderColor: "rgba(43,57,144,0.07)" }}>
+                  <div className="p-3 text-xs font-extrabold tracking-wide uppercase border-r" style={{ color: C.charcoal, borderColor: C.border }}>
                     Venue
                   </div>
                   {dynamicDates.map((dateStr, idx) => {
@@ -482,8 +443,8 @@ export default function AdminVenueTriage() {
                         style={{
                           fontWeight: isToday ? 900 : 700,
                           color: isToday ? C.blue : C.charcoal,
-                          background: isToday ? "#EEF2FF" : "transparent",
-                          borderColor: "rgba(43,57,144,0.06)",
+                          background: isToday ? tint(C.blue, 10) : "transparent",
+                          borderColor: C.border,
                         }}
                       >
                         {formatShortDate(dateStr)}
@@ -502,14 +463,14 @@ export default function AdminVenueTriage() {
                       className="grid border-b min-h-[96px] transition-colors"
                       style={{
                         gridTemplateColumns: `160px repeat(${dynamicDates.length}, minmax(130px, 1fr))`,
-                        borderColor: "rgba(43,57,144,0.06)",
-                        background: isTargetRow ? "rgba(43,57,144,0.04)" : "transparent",
+                        borderColor: C.border,
+                        background: isTargetRow ? tint(C.blue, 6) : "transparent",
                       }}
                     >
-                      <div className="p-3 flex gap-2.5 border-r bg-white" style={{ borderColor: "rgba(43,57,144,0.07)" }}>
+                      <div className="p-3 flex gap-2.5 border-r" style={{ borderColor: C.border, background: C.surface }}>
                         <div className="w-1.5 rounded-sm shrink-0" style={{ background: colorCode }} />
                         <div className="min-w-0 flex items-center">
-                          <div className="text-sm font-bold leading-tight break-words" style={{ color: "#1a1c2e" }}>{venueName}</div>
+                          <div className="text-sm font-bold leading-tight break-words" style={{ color: C.dark }}>{venueName}</div>
                         </div>
                       </div>
 
@@ -519,7 +480,7 @@ export default function AdminVenueTriage() {
                         );
 
                         return (
-                          <div key={di} className="p-2 flex flex-col gap-2 border-r" style={{ borderColor: "rgba(43,57,144,0.06)" }}>
+                          <div key={di} className="p-2 flex flex-col gap-2 border-r" style={{ borderColor: C.border }}>
                             {dayAllocations.map((allocation) => {
                               const isApproved = allocation.status === 'approved';
                               const start = parseHour(allocation.start_time);

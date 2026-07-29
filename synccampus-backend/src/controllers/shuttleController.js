@@ -12,14 +12,17 @@ exports.listRoutes = async (req, res, next) => {
   }
 };
 
-// GET /api/shuttle/schedules?routeId=...
+// GET /api/shuttle/schedules?routeId=...&date=YYYY-MM-DD
 exports.listSchedules = async (req, res, next) => {
   try {
-    const { routeId } = req.query;
+    const { routeId } = req.params; // Changed from req.query to req.params
+    const { date } = req.query;
+
     if (!routeId) {
       return res.status(400).json({ success: false, message: 'Please select a route first.' });
     }
-    const schedules = await ShuttleModel.listSchedulesByRoute(routeId);
+    
+    const schedules = await ShuttleModel.listSchedulesByRoute(routeId, date);
     res.status(200).json({ success: true, data: schedules });
   } catch (err) {
     next(err);
